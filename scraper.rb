@@ -1,24 +1,34 @@
-# This is a template for a Ruby scraper on Morph (https://morph.io)
-# including some code snippets below that you should find helpful
+require 'scraperwiki'
+require 'mechanize'
 
-# require 'scraperwiki'
-# require 'mechanize'
-#
-# agent = Mechanize.new
-#
-# # Read in a page
-# page = agent.get("http://foo.com")
-#
-# # Find somehing on the page using css selectors
-# p page.at('div.content')
-#
-# # Write out to the sqlite database using scraperwiki library
-# ScraperWiki.save_sqlite(["name"], {"name" => "susan", "occupation" => "software developer"})
-#
-# # An arbitrary query against the database
-# ScraperWiki.select("* from data where 'name'='peter'")
+# Scraping from Masterview 2.0
 
-# You don't have to do things with the Mechanize or ScraperWiki libraries. You can use whatever gems are installed
-# on Morph for Ruby (https://github.com/openaustralia/morph-docker-ruby/blob/master/Gemfile) and all that matters
-# is that your final data is written to an Sqlite database called data.sqlite in the current working directory which
-# has at least a table called data.
+def scrape_page(page)
+  page.at("table.rgMasterTable").search("tr.rgRow,tr.rgAltRow").each do |tr|
+    tds = tr.search('td').map{|t| t.inner_html.gsub("\r\n", "").strip}
+    day, month, year = tds[2].split("/").map{|s| s.to_i}
+    record = {
+      "council_reference" => tds[1],
+      "date_received" => Date.new(year, month, day).to_s,
+      "description" => tds[3].gsub("&amp;", "&").split("<br>")[0],
+      "address" => tds[3].gsub("&amp;", "&").split("<br>")[1] + ", NSW",
+      "date_scraped" => Date.today.to_s
+    }
+    p record
+  end
+end
+
+url = "http://www2.kogarah.nsw.gov.au/datrackingui/modules/applicationmaster/default.aspx?page=found&1=thismonth&4a=9&6=F"
+
+agent = Mechanize.new
+
+# Read in a page
+page = agent.get(url)
+
+form = page.forms.first
+button = form.button_with(value: " I Agree")
+form.submit(button)
+# It doesn't even redirect to the correct place. Ugh
+
+page = agent.get(url)
+scrape_page(page)
