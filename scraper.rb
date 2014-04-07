@@ -3,7 +3,7 @@ require 'mechanize'
 
 # Scraping from Masterview 2.0
 
-def scrape_page(page)
+def scrape_page(page, info_url_base, comment_url)
   page.at("table.rgMasterTable").search("tr.rgRow,tr.rgAltRow").each do |tr|
     tds = tr.search('td').map{|t| t.inner_html.gsub("\r\n", "").strip}
     day, month, year = tds[2].split("/").map{|s| s.to_i}
@@ -12,8 +12,10 @@ def scrape_page(page)
       "date_received" => Date.new(year, month, day).to_s,
       "description" => tds[3].gsub("&amp;", "&").split("<br>")[0],
       "address" => tds[3].gsub("&amp;", "&").split("<br>")[1] + ", NSW",
-      "date_scraped" => Date.today.to_s
+      "date_scraped" => Date.today.to_s,
+      "comment_url" => comment_url
     }
+    record["info_url"] = info_url_base + record["council_reference"]
     #p record
     if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
       ScraperWiki.save_sqlite(['council_reference'], record)
@@ -39,7 +41,10 @@ def click(page, doc)
   end
 end
 
-url = "http://www2.kogarah.nsw.gov.au/datrackingui/modules/applicationmaster/default.aspx?page=found&1=thismonth&4a=9&6=F"
+url_base = "http://www2.kogarah.nsw.gov.au/datrackingui/modules/applicationmaster/default.aspx"
+info_url_base = url_base + "?page=wrapper&key="
+url = url_base + "?page=found&1=thismonth&4a=9&6=F"
+comment_url = "kmcmail@kogarah.nsw.gov.au"
 
 agent = Mechanize.new
 
@@ -56,7 +61,7 @@ next_page_link = true
 
 while next_page_link
   puts "Scraping page #{current_page_no}..."
-  scrape_page(page)
+  scrape_page(page, info_url_base, comment_url)
 
   next_page_link = page.at(".rgNumPart").search("a").find{|a| a.inner_text == (current_page_no + 1).to_s}
   if next_page_link
