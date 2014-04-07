@@ -44,7 +44,7 @@ end
 url_base = "http://www2.kogarah.nsw.gov.au/datrackingui/modules/applicationmaster/default.aspx"
 info_url_base = url_base + "?page=wrapper&key="
 url = url_base + "?page=found&1=thismonth&4a=9&6=F"
-comment_url = "kmcmail@kogarah.nsw.gov.au"
+comment_url = "mailto:kmcmail@kogarah.nsw.gov.au"
 
 agent = Mechanize.new
 
