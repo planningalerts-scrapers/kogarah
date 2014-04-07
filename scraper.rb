@@ -14,7 +14,12 @@ def scrape_page(page)
       "address" => tds[3].gsub("&amp;", "&").split("<br>")[1] + ", NSW",
       "date_scraped" => Date.today.to_s
     }
-    p record
+    #p record
+    if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
+      ScraperWiki.save_sqlite(['council_reference'], record)
+    else
+      puts "Skipping already saved record " + record['council_reference']
+    end
   end
 end
 
@@ -50,12 +55,12 @@ current_page_no = 1
 next_page_link = true
 
 while next_page_link
+  puts "Scraping page #{current_page_no}..."
   scrape_page(page)
 
   next_page_link = page.at(".rgNumPart").search("a").find{|a| a.inner_text == (current_page_no + 1).to_s}
   if next_page_link
     current_page_no += 1
-    puts "Getting page #{current_page_no}..."
     page = click(page, next_page_link)
   end
 end
