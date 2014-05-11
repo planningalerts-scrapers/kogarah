@@ -60,10 +60,11 @@ current_page_no = 1
 next_page_link = true
 
 while next_page_link
+  next_page_link = false
   puts "Scraping page #{current_page_no}..."
   scrape_page(page, info_url_base, comment_url)
 
-  next_page_link = page.at(".rgNumPart").search("a").find{|a| a.inner_text == (current_page_no + 1).to_s}
+  next_page_link = page.at(".rgNumPart").search("a").find{|a| a.inner_text == (current_page_no + 1).to_s} if page.at(".rgNumPart")
   if next_page_link
     current_page_no += 1
     page = click(page, next_page_link)
