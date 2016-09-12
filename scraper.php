@@ -1,5 +1,5 @@
 <?php
-### Georges River Council scraper
+### Kogarah City Council scraper
 
 require 'scraperwiki.php';
 require 'simple_html_dom.php';

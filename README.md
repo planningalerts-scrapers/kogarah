@@ -1,4 +1,4 @@
-Georges River council scraper
+Kogarah City Council Scraper
 -----------------------------
 
 This site is a typical .NET site involves the followings.
